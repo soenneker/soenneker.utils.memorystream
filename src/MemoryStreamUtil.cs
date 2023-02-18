@@ -29,7 +29,7 @@ public class MemoryStreamUtil : IMemoryStreamUtil
         return stream;
     }
 
-    public System.IO.MemoryStream GetFromBytes(byte[] bytes)
+    public System.IO.MemoryStream Get(byte[] bytes)
     {
         System.IO.MemoryStream stream = GetManager().GetStream(bytes);
         return stream;
@@ -38,7 +38,9 @@ public class MemoryStreamUtil : IMemoryStreamUtil
     public async ValueTask<byte[]> GetBytesFromStream(Stream stream)
     {
         if (stream is System.IO.MemoryStream memStream)
+        {
             return memStream.ToArray();
+        }
 
         using System.IO.MemoryStream memoryStream = Get();
         await stream.CopyToAsync(memoryStream);
@@ -46,10 +48,10 @@ public class MemoryStreamUtil : IMemoryStreamUtil
         return result;
     }
 
-    public System.IO.MemoryStream GetFromString(string str)
+    public System.IO.MemoryStream Get(string str)
     {
         byte[] bytes = str.ToBytes();
-        System.IO.MemoryStream result = GetFromBytes(bytes);
+        System.IO.MemoryStream result = Get(bytes);
         return result;
     }
 }

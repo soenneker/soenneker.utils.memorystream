@@ -25,7 +25,7 @@ public interface IMemoryStreamUtil
     System.IO.MemoryStream Get();
 
     [Pure]
-    System.IO.MemoryStream GetFromBytes(byte[] bytes);
+    System.IO.MemoryStream Get(byte[] bytes);
 
     /// <summary>
     /// If it's a MemoryStream, simply calls ToArray()... if it's not it copies the stream into a MemoryStream and then converts into a byte array.
@@ -37,5 +37,5 @@ public interface IMemoryStreamUtil
     /// Converts to byte array (UTF8) and then converts into a MemoryStream
     /// </summary>
     [Pure]
-    System.IO.MemoryStream GetFromString(string str);
+    System.IO.MemoryStream Get(string str);
 }
