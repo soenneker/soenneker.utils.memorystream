@@ -15,23 +15,48 @@ public interface IMemoryStreamUtil
     /// </summary>
     /// <returns></returns>
     [Pure]
-    RecyclableMemoryStreamManager GetManager();
+    ValueTask<RecyclableMemoryStreamManager> GetManager();
+
+    /// <inheritdoc cref="GetManager"/>
+    [Pure]
+    RecyclableMemoryStreamManager GetManagerSync();
 
     /// <summary>
     /// Retrieves a fresh MemoryStream from the <see cref="RecyclableMemoryStreamManager"/>
     /// </summary>
     /// <returns></returns>
     [Pure]
-    System.IO.MemoryStream Get();
+    ValueTask<System.IO.MemoryStream> Get();
+
+    /// <summary>
+    /// Use async version <see cref="Get()"/> if possible. <para/>
+    /// <inheritdoc cref="Get()"/>
+    /// </summary>
+    [Pure]
+    System.IO.MemoryStream GetSync();
 
     [Pure]
-    System.IO.MemoryStream Get(byte[] bytes);
+    ValueTask<System.IO.MemoryStream> Get(byte[] bytes);
+
+    /// <summary>
+    /// Use async version <see cref="Get()"/> if possible. <para/>
+    /// <inheritdoc cref="Get()"/>
+    /// </summary>
+    [Pure]
+    System.IO.MemoryStream GetSync(byte[] bytes);
 
     /// <summary>
     /// Converts to byte array (UTF8) and then converts into a MemoryStream
     /// </summary>
     [Pure]
-    System.IO.MemoryStream Get(string str);
+    ValueTask<System.IO.MemoryStream> Get(string str);
+
+    /// <summary>
+    /// Use async version <see cref="Get()"/> if possible. <para/>
+    /// <inheritdoc cref="Get()"/>
+    /// </summary>
+    [Pure]
+    System.IO.MemoryStream GetSync(string str);
 
     /// <summary>
     /// If it's a MemoryStream, simply calls ToArray()... if it's not it copies the stream into a MemoryStream and then converts into a byte array.
