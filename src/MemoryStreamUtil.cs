@@ -1,7 +1,7 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Threading.Tasks;
 using Microsoft.IO;
+using Nito.AsyncEx;
 using Soenneker.Extensions.String;
 using Soenneker.Utils.MemoryStream.Abstract;
 
@@ -10,36 +10,85 @@ namespace Soenneker.Utils.MemoryStream;
 /// <inheritdoc cref="IMemoryStreamUtil"/>
 public class MemoryStreamUtil : IMemoryStreamUtil
 {
-    private readonly Lazy<RecyclableMemoryStreamManager> _manager;
+    private RecyclableMemoryStreamManager? _manager;
+
+    private readonly AsyncLock _lock;
 
     public MemoryStreamUtil()
     {
-        _manager = new Lazy<RecyclableMemoryStreamManager>(() => new RecyclableMemoryStreamManager(), true);
+        _lock = new AsyncLock();
     }
 
-    public RecyclableMemoryStreamManager GetManager()
+    public async ValueTask<RecyclableMemoryStreamManager> GetManager()
     {
-        RecyclableMemoryStreamManager manager = _manager.Value;
-        return manager;
+        if (_manager != null)
+            return _manager;
+
+        using (await _lock.LockAsync())
+        {
+            if (_manager != null)
+                return _manager;
+
+            var manager = new RecyclableMemoryStreamManager();
+
+            _manager = manager;
+        }
+
+        return _manager;
     }
 
-    public System.IO.MemoryStream Get()
+    public RecyclableMemoryStreamManager GetManagerSync()
     {
-        System.IO.MemoryStream stream = GetManager().GetStream();
+        if (_manager != null)
+            return _manager;
+
+        using (_lock.Lock())
+        {
+            if (_manager != null)
+                return _manager;
+
+            var manager = new RecyclableMemoryStreamManager();
+
+            _manager = manager;
+        }
+
+        return _manager;
+    }
+
+    public async ValueTask<System.IO.MemoryStream> Get()
+    {
+        System.IO.MemoryStream stream = (await GetManager()).GetStream();
         return stream;
     }
 
-    public System.IO.MemoryStream Get(byte[] bytes)
+    public System.IO.MemoryStream GetSync()
     {
-        System.IO.MemoryStream stream = GetManager().GetStream(bytes);
+        System.IO.MemoryStream stream = GetManagerSync().GetStream();
         return stream;
     }
 
-    public System.IO.MemoryStream Get(string str)
+    public async ValueTask<System.IO.MemoryStream> Get(byte[] bytes)
+    {
+        System.IO.MemoryStream stream = (await GetManager()).GetStream(bytes);
+        return stream;
+    }
+
+    public System.IO.MemoryStream GetSync(byte[] bytes)
+    {
+        System.IO.MemoryStream stream = GetManagerSync().GetStream(bytes);
+        return stream;
+    }
+
+    public ValueTask<System.IO.MemoryStream> Get(string str)
     {
         byte[] bytes = str.ToBytes();
-        System.IO.MemoryStream result = Get(bytes);
-        return result;
+        return Get(bytes);
+    }
+
+    public System.IO.MemoryStream GetSync(string str)
+    {
+        byte[] bytes = str.ToBytes();
+        return GetSync(bytes);
     }
 
     public async ValueTask<byte[]> GetBytesFromStream(Stream stream)
@@ -49,7 +98,7 @@ public class MemoryStreamUtil : IMemoryStreamUtil
             return memStream.ToArray();
         }
 
-        using System.IO.MemoryStream memoryStream = Get();
+        using System.IO.MemoryStream memoryStream = await Get();
         await stream.CopyToAsync(memoryStream);
         byte[] result = memoryStream.ToArray();
         return result;
