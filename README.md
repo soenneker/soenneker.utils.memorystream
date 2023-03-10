@@ -43,7 +43,7 @@ public class TestClass{
 
     public async ValueTask<MemoryStream> ReadFileIntoMemoryStream(string path)
     {
-        MemoryStream memoryStream = _memoryStreamUtil.Get();
+        MemoryStream memoryStream = await _memoryStreamUtil.Get(); // .GetSync() is also available
 
         FileStream fileStream = File.OpenRead(path);
 
