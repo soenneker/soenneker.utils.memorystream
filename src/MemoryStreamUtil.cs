@@ -1,8 +1,8 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 using Microsoft.IO;
-using Nito.AsyncEx;
 using Soenneker.Extensions.String;
+using Soenneker.Utils.AsyncSingleton;
 using Soenneker.Utils.MemoryStream.Abstract;
 
 namespace Soenneker.Utils.MemoryStream;
@@ -10,49 +10,21 @@ namespace Soenneker.Utils.MemoryStream;
 /// <inheritdoc cref="IMemoryStreamUtil"/>
 public class MemoryStreamUtil : IMemoryStreamUtil
 {
-    private RecyclableMemoryStreamManager? _manager;
-
-    private readonly AsyncLock _lock;
+    private readonly AsyncSingleton<RecyclableMemoryStreamManager> _manager;
 
     public MemoryStreamUtil()
     {
-        _lock = new AsyncLock();
+        _manager = new AsyncSingleton<RecyclableMemoryStreamManager>(() => new RecyclableMemoryStreamManager());
     }
 
-    public async ValueTask<RecyclableMemoryStreamManager> GetManager()
+    public ValueTask<RecyclableMemoryStreamManager> GetManager()
     {
-        if (_manager != null)
-            return _manager;
-
-        using (await _lock.LockAsync())
-        {
-            if (_manager != null)
-                return _manager;
-
-            var manager = new RecyclableMemoryStreamManager();
-
-            _manager = manager;
-        }
-
-        return _manager;
+        return _manager.Get();
     }
 
     public RecyclableMemoryStreamManager GetManagerSync()
     {
-        if (_manager != null)
-            return _manager;
-
-        using (_lock.Lock())
-        {
-            if (_manager != null)
-                return _manager;
-
-            var manager = new RecyclableMemoryStreamManager();
-
-            _manager = manager;
-        }
-
-        return _manager;
+        return _manager.GetSync();
     }
 
     public async ValueTask<System.IO.MemoryStream> Get()
