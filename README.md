@@ -2,7 +2,7 @@
 [![](https://img.shields.io/github/actions/workflow/status/soenneker/soenneker.utils.memorystream/main.yml?style=for-the-badge)](https://github.com/soenneker/soenneker.utils.memorystream/actions/workflows/main.yml)
 [![](https://img.shields.io/nuget/dt/Soenneker.Utils.MemoryStream.svg?style=for-the-badge)](https://www.nuget.org/packages/Soenneker.Utils.MemoryStream/)
 
-# Soenneker.Utils.MemoryStream
+# ![](https://user-images.githubusercontent.com/4441470/224455560-91ed3ee7-f510-4041-a8d2-3fc093025112.png) Soenneker.Utils.MemoryStream
 ### An easy modern MemoryStream utility
 
 A library for management and simple access of [RecyclableMemoryStreamManager](https://github.com/microsoft/Microsoft.IO.RecyclableMemoryStream)
