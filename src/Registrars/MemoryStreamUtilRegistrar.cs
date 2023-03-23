@@ -2,13 +2,13 @@
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Soenneker.Utils.MemoryStream.Abstract;
 
-namespace Soenneker.Utils.MemoryStream.Extensions;
+namespace Soenneker.Utils.MemoryStream.Registrars;
 
 public static class MemoryStreamUtilRegistrar
 {
     /// <summary>
     /// Adds IMemoryStreamUtil as a singleton. <para/>
-    /// Shorthand for <code>services.AddScoped</code>
+    /// Shorthand for <code>services.TryAddSingleton</code>
     /// </summary>
     public static void AddMemoryStreamUtil(this IServiceCollection services)
     {
