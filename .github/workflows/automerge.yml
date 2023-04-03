@@ -19,9 +19,6 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
 
-      - name: Authenticate cli
-        run: gh auth login
-
       - name: Enable auto-merge for Dependabot PRs
         run: gh pr merge --auto --merge "$PR_URL"
         env:
