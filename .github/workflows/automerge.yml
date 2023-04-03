@@ -14,10 +14,10 @@ jobs:
         id: metadata
         uses: dependabot/fetch-metadata@v1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{secrets.GITHUB_TOKEN}}
 
       - name: Authenticate cli with a PAT
-        run: echo "${{ secrets.RELEASE_API_KEY }}" | gh auth login --with-token
+        run: echo ${{secrets.RELEASE_API_KEY}} | gh auth login --with-token
 
       - name: Enable auto-merge for Dependabot PRs
         run: gh pr merge --auto --merge "$PR_URL"
