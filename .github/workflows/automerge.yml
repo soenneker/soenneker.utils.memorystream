@@ -14,14 +14,17 @@ jobs:
         id: metadata
         uses: dependabot/fetch-metadata@v1
         with:
-          github-token: "${{secrets.RELEASE_API_KEY}}"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Authenticate cli with a PAT
+        run: echo "${{ secrets.RELEASE_API_KEY }}" | gh auth login --with-token
+
       - name: Enable auto-merge for Dependabot PRs
         run: gh pr merge --auto --merge "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.RELEASE_API_KEY}}
+
       - name: Approve patch and minor updates
         run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.RELEASE_API_KEY}}
