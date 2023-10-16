@@ -8,6 +8,7 @@ namespace Soenneker.Utils.MemoryStream.Abstract;
 /// <summary>
 /// Should be registered as a Singleton since this relies on a manager that does take some initialization time.
 /// </summary>
+/// <remarks>Be sure to dispose of the streams returned from this ASAP.</remarks>
 public interface IMemoryStreamUtil
 {
     /// <summary>
@@ -61,6 +62,7 @@ public interface IMemoryStreamUtil
     /// <summary>
     /// If it's a MemoryStream, simply calls ToArray()... if it's not it copies the stream into a MemoryStream and then converts into a byte array.
     /// </summary>
+    /// <remarks>This will dispose of the incoming stream since it's assumed that usage of it is complete after moving to a byte array.</remarks>
     [Pure]
     ValueTask<byte[]> GetBytesFromStream(Stream stream);
 }

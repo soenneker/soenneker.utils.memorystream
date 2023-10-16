@@ -65,14 +65,20 @@ public class MemoryStreamUtil : IMemoryStreamUtil
 
     public async ValueTask<byte[]> GetBytesFromStream(Stream stream)
     {
+        byte[] result;
+
         if (stream is System.IO.MemoryStream memStream)
         {
-            return memStream.ToArray();
+            result = memStream.ToArray();
+            await memStream.DisposeAsync();
+            return result;
         }
 
-        using System.IO.MemoryStream memoryStream = await Get();
+        System.IO.MemoryStream memoryStream = await Get();
         await stream.CopyToAsync(memoryStream);
-        byte[] result = memoryStream.ToArray();
+        result = memoryStream.ToArray();
+        await memoryStream.DisposeAsync();
+
         return result;
     }
 }
