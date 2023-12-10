@@ -2,6 +2,8 @@
 using System.Threading.Tasks;
 using Microsoft.IO;
 using Soenneker.Extensions.String;
+using Soenneker.Extensions.Task;
+using Soenneker.Extensions.ValueTask;
 using Soenneker.Utils.AsyncSingleton;
 using Soenneker.Utils.MemoryStream.Abstract;
 
@@ -29,7 +31,7 @@ public class MemoryStreamUtil : IMemoryStreamUtil
 
     public async ValueTask<System.IO.MemoryStream> Get()
     {
-        System.IO.MemoryStream stream = (await GetManager()).GetStream();
+        System.IO.MemoryStream stream = (await GetManager().NoSync()).GetStream();
         return stream;
     }
 
@@ -41,7 +43,7 @@ public class MemoryStreamUtil : IMemoryStreamUtil
 
     public async ValueTask<System.IO.MemoryStream> Get(byte[] bytes)
     {
-        System.IO.MemoryStream stream = (await GetManager()).GetStream(bytes);
+        System.IO.MemoryStream stream = (await GetManager().NoSync()).GetStream(bytes);
         return stream;
     }
 
@@ -70,14 +72,14 @@ public class MemoryStreamUtil : IMemoryStreamUtil
         if (stream is System.IO.MemoryStream memStream)
         {
             result = memStream.ToArray();
-            await memStream.DisposeAsync();
+            await memStream.DisposeAsync().NoSync();
             return result;
         }
 
-        System.IO.MemoryStream memoryStream = await Get();
-        await stream.CopyToAsync(memoryStream);
+        System.IO.MemoryStream memoryStream = await Get().NoSync();
+        await stream.CopyToAsync(memoryStream).NoSync();
         result = memoryStream.ToArray();
-        await memoryStream.DisposeAsync();
+        await memoryStream.DisposeAsync().NoSync();
 
         return result;
     }
