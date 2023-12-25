@@ -10,7 +10,7 @@ A library for management and simple access of [RecyclableMemoryStreamManager](ht
 ## Installation
 
 ```
-Install-Package Soenneker.Utils.MemoryStream
+dotnet add package Soenneker.Utils.MemoryStream
 ```
 
 ## Usage
