@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.IO;
 using Soenneker.Extensions.String;
@@ -19,53 +20,53 @@ public class MemoryStreamUtil : IMemoryStreamUtil
         _manager = new AsyncSingleton<RecyclableMemoryStreamManager>(() => new RecyclableMemoryStreamManager());
     }
 
-    public ValueTask<RecyclableMemoryStreamManager> GetManager()
+    public ValueTask<RecyclableMemoryStreamManager> GetManager(CancellationToken cancellationToken = default)
     {
-        return _manager.Get();
+        return _manager.Get(cancellationToken);
     }
 
-    public RecyclableMemoryStreamManager GetManagerSync()
+    public RecyclableMemoryStreamManager GetManagerSync(CancellationToken cancellationToken = default)
     {
-        return _manager.GetSync();
+        return _manager.GetSync(cancellationToken);
     }
 
-    public async ValueTask<System.IO.MemoryStream> Get()
+    public async ValueTask<System.IO.MemoryStream> Get(CancellationToken cancellationToken = default)
     {
-        System.IO.MemoryStream stream = (await GetManager().NoSync()).GetStream();
+        System.IO.MemoryStream stream = (await GetManager(cancellationToken).NoSync()).GetStream();
         return stream;
     }
 
-    public System.IO.MemoryStream GetSync()
+    public System.IO.MemoryStream GetSync(CancellationToken cancellationToken = default)
     {
-        System.IO.MemoryStream stream = GetManagerSync().GetStream();
+        System.IO.MemoryStream stream = GetManagerSync(cancellationToken).GetStream();
         return stream;
     }
 
-    public async ValueTask<System.IO.MemoryStream> Get(byte[] bytes)
+    public async ValueTask<System.IO.MemoryStream> Get(byte[] bytes, CancellationToken cancellationToken = default)
     {
-        System.IO.MemoryStream stream = (await GetManager().NoSync()).GetStream(bytes);
+        System.IO.MemoryStream stream = (await GetManager(cancellationToken).NoSync()).GetStream(bytes);
         return stream;
     }
 
-    public System.IO.MemoryStream GetSync(byte[] bytes)
+    public System.IO.MemoryStream GetSync(byte[] bytes, CancellationToken cancellationToken = default)
     {
-        System.IO.MemoryStream stream = GetManagerSync().GetStream(bytes);
+        System.IO.MemoryStream stream = GetManagerSync(cancellationToken).GetStream(bytes);
         return stream;
     }
 
-    public ValueTask<System.IO.MemoryStream> Get(string str)
+    public ValueTask<System.IO.MemoryStream> Get(string str, CancellationToken cancellationToken = default)
     {
         byte[] bytes = str.ToBytes();
-        return Get(bytes);
+        return Get(bytes, cancellationToken);
     }
 
-    public System.IO.MemoryStream GetSync(string str)
+    public System.IO.MemoryStream GetSync(string str, CancellationToken cancellationToken = default)
     {
         byte[] bytes = str.ToBytes();
-        return GetSync(bytes);
+        return GetSync(bytes, cancellationToken);
     }
 
-    public async ValueTask<byte[]> GetBytesFromStream(Stream stream)
+    public async ValueTask<byte[]> GetBytesFromStream(Stream stream, CancellationToken cancellationToken = default)
     {
         byte[] result;
 
@@ -76,8 +77,8 @@ public class MemoryStreamUtil : IMemoryStreamUtil
             return result;
         }
 
-        System.IO.MemoryStream memoryStream = await Get().NoSync();
-        await stream.CopyToAsync(memoryStream).NoSync();
+        System.IO.MemoryStream memoryStream = await Get(cancellationToken).NoSync();
+        await stream.CopyToAsync(memoryStream, cancellationToken).NoSync();
         result = memoryStream.ToArray();
         await memoryStream.DisposeAsync().NoSync();
 
