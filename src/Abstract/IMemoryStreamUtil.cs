@@ -65,5 +65,5 @@ public interface IMemoryStreamUtil
     /// </summary>
     /// <remarks>This will dispose of the incoming stream since it's assumed that usage of it is complete after moving to a byte array.</remarks>
     [Pure]
-    ValueTask<byte[]> GetBytesFromStream(Stream stream, CancellationToken cancellationToken = default);
+    ValueTask<byte[]> GetBytesFromStream(Stream stream, bool keepOpen = false, CancellationToken cancellationToken = default);
 }

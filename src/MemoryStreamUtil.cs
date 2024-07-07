@@ -66,21 +66,26 @@ public class MemoryStreamUtil : IMemoryStreamUtil
         return GetSync(bytes, cancellationToken);
     }
 
-    public async ValueTask<byte[]> GetBytesFromStream(Stream stream, CancellationToken cancellationToken = default)
+    public async ValueTask<byte[]> GetBytesFromStream(Stream stream, bool keepOpen = false, CancellationToken cancellationToken = default)
     {
         byte[] result;
 
         if (stream is System.IO.MemoryStream memStream)
         {
             result = memStream.ToArray();
-            await memStream.DisposeAsync().NoSync();
+
+            if (!keepOpen)
+                await memStream.DisposeAsync().NoSync();
+            
             return result;
         }
 
         System.IO.MemoryStream memoryStream = await Get(cancellationToken).NoSync();
         await stream.CopyToAsync(memoryStream, cancellationToken).NoSync();
         result = memoryStream.ToArray();
-        await memoryStream.DisposeAsync().NoSync();
+
+        if (!keepOpen)
+            await memoryStream.DisposeAsync().NoSync();
 
         return result;
     }
