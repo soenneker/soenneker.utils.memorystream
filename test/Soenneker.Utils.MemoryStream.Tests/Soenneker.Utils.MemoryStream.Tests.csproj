@@ -21,7 +21,7 @@
   </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\src\Soenneker.Utils.MemoryStream.csproj" />
+        <ProjectReference Include="..\..\src\Soenneker.Utils.MemoryStream.csproj" />
     </ItemGroup>
 
 </Project>
