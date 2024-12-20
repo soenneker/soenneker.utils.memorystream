@@ -38,7 +38,7 @@
         <None Include="..\icon.png" Pack="true" PackagePath="\" />
         <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
         
-        <PackageReference Include="Soenneker.Extensions.String" Version="3.0.302" />
+        <PackageReference Include="Soenneker.Extensions.String" Version="3.0.303" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
         <PackageReference Include="Soenneker.Extensions.Task" Version="3.0.72" />
         <PackageReference Include="Soenneker.Utils.AsyncSingleton" Version="3.0.500" />
