@@ -32,14 +32,12 @@ public class MemoryStreamUtil : IMemoryStreamUtil
 
     public async ValueTask<System.IO.MemoryStream> Get(CancellationToken cancellationToken = default)
     {
-        System.IO.MemoryStream stream = (await GetManager(cancellationToken).NoSync()).GetStream();
-        return stream;
+        return (await GetManager(cancellationToken).NoSync()).GetStream();
     }
 
     public System.IO.MemoryStream GetSync(CancellationToken cancellationToken = default)
     {
-        System.IO.MemoryStream stream = GetManagerSync(cancellationToken).GetStream();
-        return stream;
+        return GetManagerSync(cancellationToken).GetStream();
     }
 
     public async ValueTask<System.IO.MemoryStream> Get(byte[] bytes, CancellationToken cancellationToken = default)
@@ -50,8 +48,7 @@ public class MemoryStreamUtil : IMemoryStreamUtil
 
     public System.IO.MemoryStream GetSync(byte[] bytes, CancellationToken cancellationToken = default)
     {
-        System.IO.MemoryStream stream = GetManagerSync(cancellationToken).GetStream(bytes);
-        return stream;
+        return GetManagerSync(cancellationToken).GetStream(bytes);
     }
 
     public ValueTask<System.IO.MemoryStream> Get(string str, CancellationToken cancellationToken = default)
