@@ -10,8 +10,10 @@ public static class MemoryStreamUtilRegistrar
     /// Adds IMemoryStreamUtil as a singleton. <para/>
     /// Shorthand for <code>services.TryAddSingleton</code>
     /// </summary>
-    public static void AddMemoryStreamUtil(this IServiceCollection services)
+    public static IServiceCollection AddMemoryStreamUtil(this IServiceCollection services)
     {
         services.TryAddSingleton<IMemoryStreamUtil, MemoryStreamUtil>();
+
+        return services;
     }
 }
