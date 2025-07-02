@@ -11,7 +11,7 @@ using Soenneker.Utils.MemoryStream.Abstract;
 namespace Soenneker.Utils.MemoryStream;
 
 /// <inheritdoc cref="IMemoryStreamUtil"/>
-public class MemoryStreamUtil : IMemoryStreamUtil
+public sealed class MemoryStreamUtil : IMemoryStreamUtil
 {
     private readonly AsyncSingleton<RecyclableMemoryStreamManager> _manager;
 
