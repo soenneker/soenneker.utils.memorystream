@@ -1,8 +1,9 @@
-﻿using System.Diagnostics.Contracts;
+﻿using Microsoft.IO;
+using System;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.IO;
 
 namespace Soenneker.Utils.MemoryStream.Abstract;
 
@@ -66,4 +67,16 @@ public interface IMemoryStreamUtil
     /// <remarks>This will dispose of the incoming stream since it's assumed that usage of it is complete after moving to a byte array.</remarks>
     [Pure]
     ValueTask<byte[]> GetBytesFromStream(Stream stream, bool keepOpen = false, CancellationToken cancellationToken = default);
+
+    [Pure]
+    System.IO.MemoryStream GetSync(ReadOnlySpan<byte> bytes, CancellationToken cancellationToken = default);
+
+    [Pure]
+    ValueTask<System.IO.MemoryStream> Get(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default);
+
+    [Pure]
+    System.IO.MemoryStream GetSync(ReadOnlySpan<char> chars, CancellationToken cancellationToken = default);
+
+    [Pure]
+    ValueTask<System.IO.MemoryStream> Get(ReadOnlyMemory<char> chars, CancellationToken cancellationToken = default);
 }
