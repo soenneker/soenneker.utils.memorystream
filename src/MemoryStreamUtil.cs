@@ -109,28 +109,33 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
 
         int byteCount = _utf8.GetByteCount(str);
 
-        // Ask for the required size up front (less internal resizing/copying)
+        if (byteCount == 0)
+            return mgr.GetStream();
+
         System.IO.MemoryStream ms = mgr.GetStream(tag: null, requiredSize: byteCount);
 
-        // IMPORTANT: TryGetBuffer exposes only [0..Length), not Capacity.
-        // Ensure Length is large enough before slicing into the segment.
-        ms.SetLength(byteCount);
+        try
+        {
+            ms.SetLength(byteCount);
 
-        if (ms.TryGetBuffer(out ArraySegment<byte> seg))
-        {
-            _utf8.GetBytes(str.AsSpan(), seg.AsSpan(0, byteCount));
-        }
-        else
-        {
-            // Rare for RecyclableMemoryStream, but keep correct fallback
+            if (ms.TryGetBuffer(out ArraySegment<byte> seg))
+            {
+                _utf8.GetBytes(str.AsSpan(), seg.AsSpan(0, byteCount));
+                ms.Position = 0;
+                return ms;
+            }
+
             byte[] tmp = GC.AllocateUninitializedArray<byte>(byteCount);
             _utf8.GetBytes(str.AsSpan(), tmp);
-            ms.Position = 0;
             ms.Write(tmp, 0, tmp.Length);
+            ms.Position = 0;
+            return ms;
         }
-
-        ms.Position = 0;
-        return ms;
+        catch
+        {
+            ms.Dispose();
+            throw;
+        }
     }
 
     public async ValueTask<byte[]> GetBytesFromStream(Stream stream, bool keepOpen = false, CancellationToken cancellationToken = default)
@@ -143,19 +148,40 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
             // Fast path: MemoryStream (includes RecyclableMemoryStream since it derives from MemoryStream)
             if (stream is System.IO.MemoryStream memStream)
             {
+                long pos64 = memStream.CanSeek ? memStream.Position : 0;
+                long len64 = memStream.Length;
+
+                if (pos64 < 0 || pos64 > len64)
+                    throw new InvalidOperationException("Stream position is out of bounds.");
+
+                int remaining = checked((int)(len64 - pos64));
+
+                if (remaining == 0)
+                    return [];
+
                 if (memStream.TryGetBuffer(out ArraySegment<byte> seg))
                 {
-                    var len = checked((int)memStream.Length);
-                    byte[] result = GC.AllocateUninitializedArray<byte>(len);
-                    Buffer.BlockCopy(seg.Array!, seg.Offset, result, 0, len);
+                    byte[] result = GC.AllocateUninitializedArray<byte>(remaining);
+
+                    int srcOffset = checked(seg.Offset + (int)pos64);
+                    Buffer.BlockCopy(seg.Array!, srcOffset, result, 0, remaining);
+
                     return result;
                 }
 
-                return memStream.ToArray();
+                // Fallback (still position-aware)
+                byte[] all = memStream.ToArray();
+
+                if (pos64 == 0 && all.Length == remaining)
+                    return all;
+
+                byte[] slice = GC.AllocateUninitializedArray<byte>(remaining);
+                Buffer.BlockCopy(all, (int)pos64, slice, 0, remaining);
+                return slice;
             }
 
             // Non-MemoryStream path
-            var initialSize = 0;
+            int initialSize = 0;
 
             if (stream.CanSeek)
             {
@@ -166,18 +192,22 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
 
             RecyclableMemoryStreamManager mgr = await GetManager(cancellationToken)
                 .NoSync();
+
             System.IO.MemoryStream buffer = initialSize > 0 ? mgr.GetStream(tag: null, requiredSize: initialSize) : mgr.GetStream();
 
             try
             {
                 await stream.CopyToAsync(buffer, cancellationToken)
                             .NoSync();
+
+                // Note: CopyToAsync writes from current stream.Position onward.
+                // buffer.Position is at end; ToArray returns the whole buffer contents.
                 return buffer.ToArray();
             }
             finally
             {
                 await buffer.DisposeAsync()
-                            .NoSync(); // always dispose the temp buffer
+                            .NoSync();
             }
         }
         finally
@@ -197,21 +227,27 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
 
         System.IO.MemoryStream ms = mgr.GetStream(tag: null, requiredSize: bytes.Length);
 
-        // IMPORTANT: TryGetBuffer exposes only [0..Length), not Capacity.
-        ms.SetLength(bytes.Length);
+        try
+        {
+            // IMPORTANT: TryGetBuffer exposes only [0..Length), not Capacity.
+            ms.SetLength(bytes.Length);
 
-        if (ms.TryGetBuffer(out ArraySegment<byte> seg))
-        {
-            bytes.CopyTo(seg.AsSpan(0, bytes.Length));
-        }
-        else
-        {
-            ms.Position = 0;
+            if (ms.TryGetBuffer(out ArraySegment<byte> seg))
+            {
+                bytes.CopyTo(seg.AsSpan(0, bytes.Length));
+                ms.Position = 0;
+                return ms;
+            }
+
             ms.Write(bytes);
+            ms.Position = 0;
+            return ms;
         }
-
-        ms.Position = 0;
-        return ms;
+        catch
+        {
+            ms.Dispose();
+            throw;
+        }
     }
 
     public ValueTask<System.IO.MemoryStream> Get(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
@@ -236,55 +272,74 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
 
             System.IO.MemoryStream ms = mgr.GetStream(tag: null, requiredSize: span.Length);
 
-            // IMPORTANT: TryGetBuffer exposes only [0..Length), not Capacity.
-            ms.SetLength(span.Length);
+            try
+            {
+                ms.SetLength(span.Length);
 
-            if (ms.TryGetBuffer(out ArraySegment<byte> seg))
-            {
-                span.CopyTo(seg.AsSpan(0, span.Length));
-            }
-            else
-            {
+                if (ms.TryGetBuffer(out ArraySegment<byte> seg))
+                {
+                    span.CopyTo(seg.AsSpan(0, span.Length));
+                }
+                else
+                {
+                    ms.Position = 0;
+                    ms.Write(span);
+                }
+
                 ms.Position = 0;
-                ms.Write(span);
+                return ms;
             }
-
-            ms.Position = 0;
-            return ms;
+            catch
+            {
+                ms.Dispose();
+                throw;
+            }
         }
+
     }
+
 
     public System.IO.MemoryStream GetSync(ReadOnlySpan<char> chars, CancellationToken cancellationToken = default)
     {
-        if (chars.Length == 0)
-            return GetManagerSync(cancellationToken)
-                .GetStream();
+        RecyclableMemoryStreamManager mgr = GetManagerSync(cancellationToken);
 
-        return GetStreamFromChars(GetManagerSync(cancellationToken), chars);
+        if (chars.Length == 0)
+            return mgr.GetStream();
+
+        return GetStreamFromChars(mgr, chars);
 
         static System.IO.MemoryStream GetStreamFromChars(RecyclableMemoryStreamManager mgr, ReadOnlySpan<char> charsSpan)
         {
-            int byteCount = _utf8.GetByteCount(charsSpan);
+            int byteCount = checked(_utf8.GetByteCount(charsSpan));
+            if (byteCount == 0)
+                return mgr.GetStream();
+
             System.IO.MemoryStream ms = mgr.GetStream(tag: null, requiredSize: byteCount);
 
-            // IMPORTANT: TryGetBuffer exposes only [0..Length), not Capacity.
-            ms.SetLength(byteCount);
+            try
+            {
+                // IMPORTANT: TryGetBuffer exposes only [0..Length), not Capacity.
+                ms.SetLength(byteCount);
 
-            if (ms.TryGetBuffer(out ArraySegment<byte> seg))
-            {
-                _utf8.GetBytes(charsSpan, seg.AsSpan(0, byteCount));
-            }
-            else
-            {
+                if (ms.TryGetBuffer(out ArraySegment<byte> seg))
+                {
+                    _utf8.GetBytes(charsSpan, seg.AsSpan(0, byteCount));
+                    ms.Position = 0;
+                    return ms;
+                }
+
                 // Fallback
                 byte[] tmp = GC.AllocateUninitializedArray<byte>(byteCount);
                 _utf8.GetBytes(charsSpan, tmp);
-                ms.Position = 0;
                 ms.Write(tmp, 0, tmp.Length);
+                ms.Position = 0;
+                return ms;
             }
-
-            ms.Position = 0;
-            return ms;
+            catch
+            {
+                ms.Dispose();
+                throw;
+            }
         }
     }
 
@@ -309,25 +364,35 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
                 return mgr.GetStream();
 
             int byteCount = _utf8.GetByteCount(charsSpan);
+            if (byteCount == 0)
+                return mgr.GetStream();
+
             System.IO.MemoryStream ms = mgr.GetStream(tag: null, requiredSize: byteCount);
 
-            // IMPORTANT: TryGetBuffer exposes only [0..Length), not Capacity.
-            ms.SetLength(byteCount);
+            try
+            {
+                // IMPORTANT: TryGetBuffer exposes only [0..Length), not Capacity.
+                ms.SetLength(byteCount);
 
-            if (ms.TryGetBuffer(out ArraySegment<byte> seg))
-            {
-                _utf8.GetBytes(charsSpan, seg.AsSpan(0, byteCount));
-            }
-            else
-            {
+                if (ms.TryGetBuffer(out ArraySegment<byte> seg))
+                {
+                    _utf8.GetBytes(charsSpan, seg.AsSpan(0, byteCount));
+                    ms.Position = 0;
+                    return ms;
+                }
+
+                // Fallback
                 byte[] tmp = GC.AllocateUninitializedArray<byte>(byteCount);
                 _utf8.GetBytes(charsSpan, tmp);
-                ms.Position = 0;
                 ms.Write(tmp, 0, tmp.Length);
+                ms.Position = 0;
+                return ms;
             }
-
-            ms.Position = 0;
-            return ms;
+            catch
+            {
+                ms.Dispose();
+                throw;
+            }
         }
     }
 }
