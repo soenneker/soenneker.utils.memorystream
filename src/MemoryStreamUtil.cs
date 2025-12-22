@@ -1,6 +1,6 @@
-﻿using Microsoft.IO;
-using Soenneker.Extensions.Task;
+﻿using Soenneker.Extensions.Task;
 using Soenneker.Extensions.ValueTask;
+using Microsoft.IO;
 using Soenneker.Utils.AsyncSingleton;
 using Soenneker.Utils.MemoryStream.Abstract;
 using System;
@@ -43,8 +43,9 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
         }
     }
 
-    public System.IO.MemoryStream GetSync(CancellationToken cancellationToken = default) => GetManagerSync(cancellationToken)
-        .GetStream();
+    public System.IO.MemoryStream GetSync(CancellationToken cancellationToken = default) =>
+        GetManagerSync(cancellationToken)
+            .GetStream();
 
     public ValueTask<System.IO.MemoryStream> Get(byte[] bytes, CancellationToken cancellationToken = default)
     {
@@ -111,16 +112,20 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
         // Ask for the required size up front (less internal resizing/copying)
         System.IO.MemoryStream ms = mgr.GetStream(tag: null, requiredSize: byteCount);
 
+        // IMPORTANT: TryGetBuffer exposes only [0..Length), not Capacity.
+        // Ensure Length is large enough before slicing into the segment.
+        ms.SetLength(byteCount);
+
         if (ms.TryGetBuffer(out ArraySegment<byte> seg))
         {
             _utf8.GetBytes(str.AsSpan(), seg.AsSpan(0, byteCount));
-            ms.SetLength(byteCount); // ensure logical length matches what we wrote
         }
         else
         {
             // Rare for RecyclableMemoryStream, but keep correct fallback
             byte[] tmp = GC.AllocateUninitializedArray<byte>(byteCount);
             _utf8.GetBytes(str.AsSpan(), tmp);
+            ms.Position = 0;
             ms.Write(tmp, 0, tmp.Length);
         }
 
@@ -192,14 +197,16 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
 
         System.IO.MemoryStream ms = mgr.GetStream(tag: null, requiredSize: bytes.Length);
 
+        // IMPORTANT: TryGetBuffer exposes only [0..Length), not Capacity.
+        ms.SetLength(bytes.Length);
+
         if (ms.TryGetBuffer(out ArraySegment<byte> seg))
         {
             bytes.CopyTo(seg.AsSpan(0, bytes.Length));
-            ms.SetLength(bytes.Length);
         }
         else
         {
-            // Rare for RMS, but keep correct fallback
+            ms.Position = 0;
             ms.Write(bytes);
         }
 
@@ -229,13 +236,16 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
 
             System.IO.MemoryStream ms = mgr.GetStream(tag: null, requiredSize: span.Length);
 
+            // IMPORTANT: TryGetBuffer exposes only [0..Length), not Capacity.
+            ms.SetLength(span.Length);
+
             if (ms.TryGetBuffer(out ArraySegment<byte> seg))
             {
                 span.CopyTo(seg.AsSpan(0, span.Length));
-                ms.SetLength(span.Length);
             }
             else
             {
+                ms.Position = 0;
                 ms.Write(span);
             }
 
@@ -257,16 +267,19 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
             int byteCount = _utf8.GetByteCount(charsSpan);
             System.IO.MemoryStream ms = mgr.GetStream(tag: null, requiredSize: byteCount);
 
+            // IMPORTANT: TryGetBuffer exposes only [0..Length), not Capacity.
+            ms.SetLength(byteCount);
+
             if (ms.TryGetBuffer(out ArraySegment<byte> seg))
             {
                 _utf8.GetBytes(charsSpan, seg.AsSpan(0, byteCount));
-                ms.SetLength(byteCount);
             }
             else
             {
                 // Fallback
                 byte[] tmp = GC.AllocateUninitializedArray<byte>(byteCount);
                 _utf8.GetBytes(charsSpan, tmp);
+                ms.Position = 0;
                 ms.Write(tmp, 0, tmp.Length);
             }
 
@@ -298,15 +311,18 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
             int byteCount = _utf8.GetByteCount(charsSpan);
             System.IO.MemoryStream ms = mgr.GetStream(tag: null, requiredSize: byteCount);
 
+            // IMPORTANT: TryGetBuffer exposes only [0..Length), not Capacity.
+            ms.SetLength(byteCount);
+
             if (ms.TryGetBuffer(out ArraySegment<byte> seg))
             {
                 _utf8.GetBytes(charsSpan, seg.AsSpan(0, byteCount));
-                ms.SetLength(byteCount);
             }
             else
             {
                 byte[] tmp = GC.AllocateUninitializedArray<byte>(byteCount);
                 _utf8.GetBytes(charsSpan, tmp);
+                ms.Position = 0;
                 ms.Write(tmp, 0, tmp.Length);
             }
 
