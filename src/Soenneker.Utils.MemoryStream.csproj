@@ -46,6 +46,6 @@
         <PackageReference Include="Soenneker.Extensions.String" Version="4.0.590" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
         <PackageReference Include="Soenneker.Extensions.Task" Version="4.0.110" />
-        <PackageReference Include="Soenneker.Utils.AsyncSingleton" Version="4.0.736" />
+        <PackageReference Include="Soenneker.Utils.AsyncSingleton" Version="4.0.738" />
     </ItemGroup>
 </Project>
