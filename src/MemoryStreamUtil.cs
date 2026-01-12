@@ -197,15 +197,42 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
             return result;
         }
 
-        // Fallback (position-aware)
-        byte[] all = memStream.ToArray();
+        // Fallback (position-aware) without copying the entire stream (MemoryStream.ToArray()).
+        // Preserve caller's Position semantics.
+        long originalPos = memStream.CanSeek ? memStream.Position : 0;
+        byte[] resultFallback = GC.AllocateUninitializedArray<byte>(remaining);
 
-        if (pos64 == 0 && all.Length == remaining)
-            return all;
+        try
+        {
+            if (memStream.CanSeek)
+                memStream.Position = pos64;
 
-        byte[] slice = GC.AllocateUninitializedArray<byte>(remaining);
-        Buffer.BlockCopy(all, (int)pos64, slice, 0, remaining);
-        return slice;
+            var totalRead = 0;
+
+            while (totalRead < remaining)
+            {
+                int read = memStream.Read(resultFallback, totalRead, remaining - totalRead);
+                if (read == 0)
+                    break;
+                totalRead += read;
+            }
+
+            if (totalRead != remaining)
+            {
+                // Extremely defensive: if stream length changed mid-read (shouldn't happen for MemoryStream),
+                // return the bytes we did read.
+                byte[] truncated = new byte[totalRead];
+                Buffer.BlockCopy(resultFallback, 0, truncated, 0, totalRead);
+                return truncated;
+            }
+
+            return resultFallback;
+        }
+        finally
+        {
+            if (memStream.CanSeek)
+                memStream.Position = originalPos;
+        }
     }
 
     private async ValueTask<byte[]> GetBytesFromNonMemoryStream(Stream stream, CancellationToken cancellationToken)
