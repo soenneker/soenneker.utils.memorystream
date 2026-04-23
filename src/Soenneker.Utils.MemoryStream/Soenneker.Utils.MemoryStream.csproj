@@ -43,8 +43,8 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
-        <PackageReference Include="Soenneker.Extensions.String" Version="4.0.672" />
+        <PackageReference Include="Soenneker.Extensions.String" Version="4.0.673" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.7" />
-        <PackageReference Include="Soenneker.Utils.AsyncSingleton" Version="4.0.787" />
+        <PackageReference Include="Soenneker.Utils.AsyncSingleton" Version="4.0.788" />
     </ItemGroup>
 </Project>
