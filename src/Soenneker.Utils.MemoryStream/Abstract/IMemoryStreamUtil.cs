@@ -20,7 +20,11 @@ public interface IMemoryStreamUtil
     [Pure]
     ValueTask<RecyclableMemoryStreamManager> GetManager(CancellationToken cancellationToken = default);
 
-    /// <inheritdoc cref="GetManager"/>
+    /// <summary>
+    /// Gets manager sync.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The result of the operation.</returns>
     [Pure]
     RecyclableMemoryStreamManager GetManagerSync(CancellationToken cancellationToken = default);
 
@@ -32,19 +36,28 @@ public interface IMemoryStreamUtil
     ValueTask<System.IO.MemoryStream> Get(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Use async version <see cref="Get(CancellationToken)"/> if possible. <para/>
-    /// <inheritdoc cref="Get(CancellationToken)"/>
+    /// Gets sync.
     /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The result of the operation.</returns>
     [Pure]
     System.IO.MemoryStream GetSync(CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Gets the value.
+    /// </summary>
+    /// <param name="bytes">The bytes.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task containing the result of the operation.</returns>
     [Pure]
     ValueTask<System.IO.MemoryStream> Get(byte[] bytes, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Use async version <see cref="Get(CancellationToken)"/> if possible. <para/>
-    /// <inheritdoc cref="Get(CancellationToken)"/>
+    /// Gets sync.
     /// </summary>
+    /// <param name="bytes">The bytes.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The result of the operation.</returns>
     [Pure]
     System.IO.MemoryStream GetSync(byte[] bytes, CancellationToken cancellationToken = default);
 
@@ -55,9 +68,11 @@ public interface IMemoryStreamUtil
     ValueTask<System.IO.MemoryStream> Get(string str, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Use async version <see cref="Get(CancellationToken)"/> if possible. <para/>
-    /// <inheritdoc cref="Get(CancellationToken)"/>
+    /// Gets sync.
     /// </summary>
+    /// <param name="str">The str.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The result of the operation.</returns>
     [Pure]
     System.IO.MemoryStream GetSync(string str, CancellationToken cancellationToken = default);
 
@@ -68,15 +83,39 @@ public interface IMemoryStreamUtil
     [Pure]
     ValueTask<byte[]> GetBytesFromStream(Stream stream, bool keepOpen = false, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Gets sync.
+    /// </summary>
+    /// <param name="bytes">The bytes.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The result of the operation.</returns>
     [Pure]
     System.IO.MemoryStream GetSync(ReadOnlySpan<byte> bytes, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Gets the value.
+    /// </summary>
+    /// <param name="bytes">The bytes.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task containing the result of the operation.</returns>
     [Pure]
     ValueTask<System.IO.MemoryStream> Get(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Gets sync.
+    /// </summary>
+    /// <param name="chars">The chars.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The result of the operation.</returns>
     [Pure]
     System.IO.MemoryStream GetSync(ReadOnlySpan<char> chars, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Gets the value.
+    /// </summary>
+    /// <param name="chars">The chars.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task containing the result of the operation.</returns>
     [Pure]
     ValueTask<System.IO.MemoryStream> Get(ReadOnlyMemory<char> chars, CancellationToken cancellationToken = default);
 }
