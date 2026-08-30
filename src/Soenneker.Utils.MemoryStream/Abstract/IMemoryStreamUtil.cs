@@ -78,10 +78,13 @@ public interface IMemoryStreamUtil
     System.IO.MemoryStream GetSync(string str, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// If it's a MemoryStream, simply calls ToArray()... if it's not it copies the stream into a MemoryStream and then converts into a byte array.
+    /// Copies bytes from the stream's current position to the end into a new array.
     /// </summary>
-    /// <remarks>This will dispose of the incoming stream since it's assumed that usage of it is complete after moving to a byte array.</remarks>
-    /// <returns>If it's a MemoryStream, simply calls ToArray()... if it's not it copies the stream into a MemoryStream and then converts into a byte array.</returns>
+    /// <remarks>A memory stream's position is preserved. Other stream types are consumed. The input is disposed unless <paramref name="keepOpen"/> is true.</remarks>
+    /// <param name="stream">The stream to read from.</param>
+    /// <param name="keepOpen">True to leave the input stream open; false to dispose it after the operation.</param>
+    /// <param name="cancellationToken">Signals that copying should stop.</param>
+    /// <returns>The remaining stream content.</returns>
     [Pure]
     ValueTask<byte[]> GetBytesFromStream(Stream stream, bool keepOpen = false, CancellationToken cancellationToken = default);
 
