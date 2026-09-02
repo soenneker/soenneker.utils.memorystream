@@ -18,9 +18,9 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task GetManager_ShouldReturnRecyclableMemoryStreamManager()
+    public async Task GetManager_ShouldReturnRecyclableMemoryStreamManager(CancellationToken cancellationToken)
     {
-        RecyclableMemoryStreamManager manager = await _util.GetManager();
+        RecyclableMemoryStreamManager manager = await _util.GetManager(cancellationToken: cancellationToken);
 
         manager.Should().NotBeNull();
     }
@@ -34,10 +34,10 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task GetManager_ShouldReturnSameInstance()
+    public async Task GetManager_ShouldReturnSameInstance(CancellationToken cancellationToken)
     {
-        RecyclableMemoryStreamManager manager1 = await _util.GetManager();
-        RecyclableMemoryStreamManager manager2 = await _util.GetManager();
+        RecyclableMemoryStreamManager manager1 = await _util.GetManager(cancellationToken: cancellationToken);
+        RecyclableMemoryStreamManager manager2 = await _util.GetManager(cancellationToken: cancellationToken);
 
         manager1.Should().BeSameAs(manager2);
     }
@@ -72,9 +72,9 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task Get_Empty_ShouldReturnMemoryStream()
+    public async Task Get_Empty_ShouldReturnMemoryStream(CancellationToken cancellationToken)
     {
-        System.IO.MemoryStream stream = await _util.Get();
+        System.IO.MemoryStream stream = await _util.Get(cancellationToken: cancellationToken);
 
         stream.Should().NotBeNull();
         stream.Length.Should().Be(0);
@@ -98,11 +98,9 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task Get_Empty_WithCancellationToken_ShouldReturnMemoryStream()
+    public async Task Get_Empty_WithCancellationToken_ShouldReturnMemoryStream(CancellationToken cancellationToken)
     {
-        using CancellationTokenSource cts = new();
-
-        System.IO.MemoryStream stream = await _util.Get(cts.Token);
+        System.IO.MemoryStream stream = await _util.Get(cancellationToken);
 
         stream.Should().NotBeNull();
         stream.Length.Should().Be(0);
@@ -120,11 +118,11 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task Get_WithByteArray_ShouldReturnMemoryStreamWithData()
+    public async Task Get_WithByteArray_ShouldReturnMemoryStreamWithData(CancellationToken cancellationToken)
     {
         byte[] data = [1, 2, 3, 4, 5];
 
-        System.IO.MemoryStream stream = await _util.Get(data);
+        System.IO.MemoryStream stream = await _util.Get(data, cancellationToken: cancellationToken);
 
         stream.Should().NotBeNull();
         stream.Length.Should().Be(5);
@@ -148,11 +146,11 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task Get_WithEmptyByteArray_ShouldReturnEmptyMemoryStream()
+    public async Task Get_WithEmptyByteArray_ShouldReturnEmptyMemoryStream(CancellationToken cancellationToken)
     {
         byte[] data = [];
 
-        System.IO.MemoryStream stream = await _util.Get(data);
+        System.IO.MemoryStream stream = await _util.Get(data, cancellationToken: cancellationToken);
 
         stream.Should().NotBeNull();
         stream.Length.Should().Be(0);
@@ -170,9 +168,9 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task Get_WithNullByteArray_ShouldThrowArgumentNullException()
+    public async Task Get_WithNullByteArray_ShouldThrowArgumentNullException(CancellationToken cancellationToken)
     {
-        await Assert.ThrowsAsync<ArgumentNullException>(() => _util.Get((byte[])null!).AsTask());
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _util.Get((byte[])null!, cancellationToken: cancellationToken).AsTask());
     }
 
     [Test]
@@ -182,12 +180,12 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task Get_WithLargeByteArray_ShouldReturnMemoryStreamWithData()
+    public async Task Get_WithLargeByteArray_ShouldReturnMemoryStreamWithData(CancellationToken cancellationToken)
     {
         byte[] data = new byte[10000];
         new System.Random().NextBytes(data);
 
-        System.IO.MemoryStream stream = await _util.Get(data);
+        System.IO.MemoryStream stream = await _util.Get(data, cancellationToken: cancellationToken);
 
         stream.Should().NotBeNull();
         stream.Length.Should().Be(10000);
@@ -234,11 +232,11 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task Get_WithString_ShouldReturnMemoryStreamWithUtf8Data()
+    public async Task Get_WithString_ShouldReturnMemoryStreamWithUtf8Data(CancellationToken cancellationToken)
     {
         string text = "Hello, World!";
 
-        System.IO.MemoryStream stream = await _util.Get(text);
+        System.IO.MemoryStream stream = await _util.Get(text, cancellationToken: cancellationToken);
 
         stream.Should().NotBeNull();
         stream.Position.Should().Be(0);
@@ -262,11 +260,11 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task Get_WithEmptyString_ShouldReturnEmptyMemoryStream()
+    public async Task Get_WithEmptyString_ShouldReturnEmptyMemoryStream(CancellationToken cancellationToken)
     {
         string text = "";
 
-        System.IO.MemoryStream stream = await _util.Get(text);
+        System.IO.MemoryStream stream = await _util.Get(text, cancellationToken: cancellationToken);
 
         stream.Should().NotBeNull();
         stream.Length.Should().Be(0);
@@ -284,9 +282,9 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task Get_WithNullString_ShouldThrowArgumentNullException()
+    public async Task Get_WithNullString_ShouldThrowArgumentNullException(CancellationToken cancellationToken)
     {
-        await Assert.ThrowsAsync<ArgumentNullException>(() => _util.Get((string)null!).AsTask());
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _util.Get((string)null!, cancellationToken: cancellationToken).AsTask());
     }
 
     [Test]
@@ -296,11 +294,11 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task Get_WithUnicodeString_ShouldReturnMemoryStreamWithUtf8Data()
+    public async Task Get_WithUnicodeString_ShouldReturnMemoryStreamWithUtf8Data(CancellationToken cancellationToken)
     {
         string text = "Hello, 世界! 🌍";
 
-        System.IO.MemoryStream stream = await _util.Get(text);
+        System.IO.MemoryStream stream = await _util.Get(text, cancellationToken: cancellationToken);
 
         stream.Should().NotBeNull();
         byte[] result = stream.ToArray();
@@ -346,12 +344,12 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task Get_WithReadOnlyMemoryByte_ShouldReturnMemoryStreamWithData()
+    public async Task Get_WithReadOnlyMemoryByte_ShouldReturnMemoryStreamWithData(CancellationToken cancellationToken)
     {
         byte[] data = [10, 20, 30, 40];
         ReadOnlyMemory<byte> memory = data;
 
-        System.IO.MemoryStream stream = await _util.Get(memory);
+        System.IO.MemoryStream stream = await _util.Get(memory, cancellationToken: cancellationToken);
 
         stream.Should().NotBeNull();
         stream.Length.Should().Be(4);
@@ -361,11 +359,11 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task Get_WithEmptyReadOnlyMemoryByte_ShouldReturnEmptyMemoryStream()
+    public async Task Get_WithEmptyReadOnlyMemoryByte_ShouldReturnEmptyMemoryStream(CancellationToken cancellationToken)
     {
         ReadOnlyMemory<byte> memory = ReadOnlyMemory<byte>.Empty;
 
-        System.IO.MemoryStream stream = await _util.Get(memory);
+        System.IO.MemoryStream stream = await _util.Get(memory, cancellationToken: cancellationToken);
 
         stream.Should().NotBeNull();
         stream.Length.Should().Be(0);
@@ -385,13 +383,13 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task Get_WithLargeReadOnlyMemoryByte_ShouldReturnMemoryStreamWithData()
+    public async Task Get_WithLargeReadOnlyMemoryByte_ShouldReturnMemoryStreamWithData(CancellationToken cancellationToken)
     {
         byte[] data = new byte[5000];
         new System.Random().NextBytes(data);
         ReadOnlyMemory<byte> memory = data;
 
-        System.IO.MemoryStream stream = await _util.Get(memory);
+        System.IO.MemoryStream stream = await _util.Get(memory, cancellationToken: cancellationToken);
 
         stream.Should().NotBeNull();
         stream.Length.Should().Be(5000);
@@ -507,12 +505,12 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task Get_WithReadOnlyMemoryChar_ShouldReturnMemoryStreamWithUtf8Data()
+    public async Task Get_WithReadOnlyMemoryChar_ShouldReturnMemoryStreamWithUtf8Data(CancellationToken cancellationToken)
     {
         string text = "Memory Test";
         ReadOnlyMemory<char> memory = text.AsMemory();
 
-        System.IO.MemoryStream stream = await _util.Get(memory);
+        System.IO.MemoryStream stream = await _util.Get(memory, cancellationToken: cancellationToken);
 
         stream.Should().NotBeNull();
         stream.Position.Should().Be(0);
@@ -522,11 +520,11 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task Get_WithEmptyReadOnlyMemoryChar_ShouldReturnEmptyMemoryStream()
+    public async Task Get_WithEmptyReadOnlyMemoryChar_ShouldReturnEmptyMemoryStream(CancellationToken cancellationToken)
     {
         ReadOnlyMemory<char> memory = ReadOnlyMemory<char>.Empty;
 
-        System.IO.MemoryStream stream = await _util.Get(memory);
+        System.IO.MemoryStream stream = await _util.Get(memory, cancellationToken: cancellationToken);
 
         stream.Should().NotBeNull();
         stream.Length.Should().Be(0);
@@ -546,12 +544,12 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task Get_WithUnicodeReadOnlyMemoryChar_ShouldReturnMemoryStreamWithUtf8Data()
+    public async Task Get_WithUnicodeReadOnlyMemoryChar_ShouldReturnMemoryStreamWithUtf8Data(CancellationToken cancellationToken)
     {
         string text = "Memory 测试 🚀";
         ReadOnlyMemory<char> memory = text.AsMemory();
 
-        System.IO.MemoryStream stream = await _util.Get(memory);
+        System.IO.MemoryStream stream = await _util.Get(memory, cancellationToken: cancellationToken);
 
         stream.Should().NotBeNull();
         byte[] result = stream.ToArray();
@@ -560,86 +558,86 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task GetBytesFromStream_WithMemoryStream_ShouldReturnByteArray()
+    public async Task GetBytesFromStream_WithMemoryStream_ShouldReturnByteArray(CancellationToken cancellationToken)
     {
         byte[] originalData = [1, 2, 3, 4, 5];
         using System.IO.MemoryStream inputStream = new(originalData);
 
-        byte[] result = await _util.GetBytesFromStream(inputStream);
+        byte[] result = await _util.GetBytesFromStream(inputStream, cancellationToken: cancellationToken);
 
         result.Should().BeEquivalentTo(originalData);
         inputStream.CanRead.Should().BeFalse(); // Stream should be disposed
     }
 
     [Test]
-    public async Task GetBytesFromStream_WithMemoryStreamAtPosition_ShouldReturnRemainingBytes()
+    public async Task GetBytesFromStream_WithMemoryStreamAtPosition_ShouldReturnRemainingBytes(CancellationToken cancellationToken)
     {
         byte[] originalData = [1, 2, 3, 4, 5];
         using System.IO.MemoryStream inputStream = new(originalData);
         inputStream.Position = 2; // Skip first 2 bytes
 
-        byte[] result = await _util.GetBytesFromStream(inputStream);
+        byte[] result = await _util.GetBytesFromStream(inputStream, cancellationToken: cancellationToken);
 
         result.Should().BeEquivalentTo([3, 4, 5]);
         inputStream.CanRead.Should().BeFalse(); // Stream should be disposed
     }
 
     [Test]
-    public async Task GetBytesFromStream_WithMemoryStreamAtEnd_ShouldReturnEmptyArray()
+    public async Task GetBytesFromStream_WithMemoryStreamAtEnd_ShouldReturnEmptyArray(CancellationToken cancellationToken)
     {
         byte[] originalData = [1, 2, 3];
         using System.IO.MemoryStream inputStream = new(originalData);
         inputStream.Position = inputStream.Length; // At end
 
-        byte[] result = await _util.GetBytesFromStream(inputStream);
+        byte[] result = await _util.GetBytesFromStream(inputStream, cancellationToken: cancellationToken);
 
         result.Should().BeEmpty();
         inputStream.CanRead.Should().BeFalse(); // Stream should be disposed
     }
 
     [Test]
-    public async Task GetBytesFromStream_WithEmptyMemoryStream_ShouldReturnEmptyArray()
+    public async Task GetBytesFromStream_WithEmptyMemoryStream_ShouldReturnEmptyArray(CancellationToken cancellationToken)
     {
         using System.IO.MemoryStream inputStream = new();
 
-        byte[] result = await _util.GetBytesFromStream(inputStream);
+        byte[] result = await _util.GetBytesFromStream(inputStream, cancellationToken: cancellationToken);
 
         result.Should().BeEmpty();
         inputStream.CanRead.Should().BeFalse(); // Stream should be disposed
     }
 
     [Test]
-    public async Task GetBytesFromStream_WithKeepOpenTrue_ShouldNotDisposeStream()
+    public async Task GetBytesFromStream_WithKeepOpenTrue_ShouldNotDisposeStream(CancellationToken cancellationToken)
     {
         byte[] originalData = [1, 2, 3];
         using System.IO.MemoryStream inputStream = new(originalData);
 
-        byte[] result = await _util.GetBytesFromStream(inputStream, keepOpen: true);
+        byte[] result = await _util.GetBytesFromStream(inputStream, keepOpen: true, cancellationToken: cancellationToken);
 
         result.Should().BeEquivalentTo(originalData);
         inputStream.CanRead.Should().BeTrue(); // Stream should still be open
     }
 
     [Test]
-    public async Task GetBytesFromStream_WithKeepOpenFalse_ShouldDisposeStream()
+    public async Task GetBytesFromStream_WithKeepOpenFalse_ShouldDisposeStream(CancellationToken cancellationToken)
     {
         byte[] originalData = [1, 2, 3];
         using System.IO.MemoryStream inputStream = new(originalData);
 
-        byte[] result = await _util.GetBytesFromStream(inputStream, keepOpen: false);
+        byte[] result = await _util.GetBytesFromStream(inputStream, keepOpen: false, cancellationToken: cancellationToken);
 
         result.Should().BeEquivalentTo(originalData);
         inputStream.CanRead.Should().BeFalse(); // Stream should be disposed
     }
 
     [Test]
-    public async Task GetBytesFromStream_WithNullStream_ShouldThrowArgumentNullException()
+    public async Task GetBytesFromStream_WithNullStream_ShouldThrowArgumentNullException(CancellationToken cancellationToken)
     {
-        await Assert.ThrowsAsync<ArgumentNullException>(() => _util.GetBytesFromStream(null!).AsTask());
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _util.GetBytesFromStream(null!, cancellationToken: cancellationToken).AsTask());
     }
 
     [Test]
-    public async Task GetBytesFromStream_WithFileStream_ShouldReturnByteArray()
+    public async Task GetBytesFromStream_WithFileStream_ShouldReturnByteArray(CancellationToken cancellationToken)
     {
         string tempFile = Path.GetTempFileName();
         try
@@ -649,7 +647,7 @@ public class MemoryStreamUtilTests
 
             using FileStream fileStream = new(tempFile, FileMode.Open, FileAccess.Read);
 
-            byte[] result = await _util.GetBytesFromStream(fileStream, keepOpen: true);
+            byte[] result = await _util.GetBytesFromStream(fileStream, keepOpen: true, cancellationToken: cancellationToken);
 
             result.Should().BeEquivalentTo(originalData);
         }
@@ -661,13 +659,13 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task GetBytesFromStream_WithLargeMemoryStream_ShouldReturnByteArray()
+    public async Task GetBytesFromStream_WithLargeMemoryStream_ShouldReturnByteArray(CancellationToken cancellationToken)
     {
         byte[] originalData = new byte[10000];
         new System.Random().NextBytes(originalData);
         using System.IO.MemoryStream inputStream = new(originalData);
 
-        byte[] result = await _util.GetBytesFromStream(inputStream);
+        byte[] result = await _util.GetBytesFromStream(inputStream, cancellationToken: cancellationToken);
 
         result.Should().BeEquivalentTo(originalData);
         result.Length.Should().Be(10000);
@@ -686,24 +684,24 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async Task GetBytesFromStream_WithNonSeekableStream_ShouldReturnByteArray()
+    public async Task GetBytesFromStream_WithNonSeekableStream_ShouldReturnByteArray(CancellationToken cancellationToken)
     {
         byte[] originalData = [5, 10, 15, 20];
         using System.IO.MemoryStream baseStream = new(originalData);
         using NonSeekableStream nonSeekableStream = new(baseStream);
 
-        byte[] result = await _util.GetBytesFromStream(nonSeekableStream, keepOpen: true);
+        byte[] result = await _util.GetBytesFromStream(nonSeekableStream, keepOpen: true, cancellationToken: cancellationToken);
 
         result.Should().BeEquivalentTo(originalData);
     }
 
     [Test]
-    public async Task GetBytesFromStream_WithMemoryStreamInvalidPosition_ShouldThrowInvalidOperationException()
+    public async Task GetBytesFromStream_WithMemoryStreamInvalidPosition_ShouldThrowInvalidOperationException(CancellationToken cancellationToken)
     {
         byte[] originalData = [1, 2, 3];
         using InvalidPositionStream invalidStream = new(originalData, 10); // Position 10, length 3
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _util.GetBytesFromStream(invalidStream).AsTask());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _util.GetBytesFromStream(invalidStream, cancellationToken: cancellationToken).AsTask());
     }
 
 }
