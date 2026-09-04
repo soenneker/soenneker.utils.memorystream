@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace Soenneker.Utils.MemoryStream;
 
+/// <inheritdoc cref="IMemoryStreamUtil" />
 public sealed class MemoryStreamUtil : IMemoryStreamUtil
 {
     private static readonly Encoding _utf8 = Encoding.UTF8;
