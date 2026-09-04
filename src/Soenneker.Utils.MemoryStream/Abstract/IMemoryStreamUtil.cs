@@ -11,7 +11,7 @@ namespace Soenneker.Utils.MemoryStream.Abstract;
 /// Should be registered as a Singleton since this relies on a manager that does take some initialization time.
 /// </summary>
 /// <remarks>Be sure to dispose of the streams returned from this ASAP.</remarks>
-public interface IMemoryStreamUtil
+public interface IMemoryStreamUtil : IAsyncDisposable
 {
     /// <summary>
     /// Typically, not going to be used externally, but available just in case.

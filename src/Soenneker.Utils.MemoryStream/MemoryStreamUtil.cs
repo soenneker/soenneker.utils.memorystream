@@ -61,8 +61,7 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValueTask<System.IO.MemoryStream> Get(byte[] bytes, CancellationToken cancellationToken = default)
     {
-        if (bytes is null)
-            throw new ArgumentNullException(nameof(bytes));
+        ArgumentNullException.ThrowIfNull(bytes);
 
         ValueTask<RecyclableMemoryStreamManager> vt = GetManager(cancellationToken);
 
@@ -81,8 +80,7 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public System.IO.MemoryStream GetSync(byte[] bytes, CancellationToken cancellationToken = default)
     {
-        if (bytes is null)
-            throw new ArgumentNullException(nameof(bytes));
+        ArgumentNullException.ThrowIfNull(bytes);
 
         return GetManagerSync(cancellationToken)
             .GetStream(bytes);
@@ -91,8 +89,7 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValueTask<System.IO.MemoryStream> Get(string str, CancellationToken cancellationToken = default)
     {
-        if (str is null)
-            throw new ArgumentNullException(nameof(str));
+        ArgumentNullException.ThrowIfNull(str);
 
         ValueTask<RecyclableMemoryStreamManager> vt = GetManager(cancellationToken);
 
@@ -111,8 +108,7 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public System.IO.MemoryStream GetSync(string str, CancellationToken cancellationToken = default)
     {
-        if (str is null)
-            throw new ArgumentNullException(nameof(str));
+        ArgumentNullException.ThrowIfNull(str);
 
         return GetStreamFromString(GetManagerSync(cancellationToken), str);
     }
@@ -156,8 +152,7 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
 
     public async ValueTask<byte[]> GetBytesFromStream(Stream stream, bool keepOpen = false, CancellationToken cancellationToken = default)
     {
-        if (stream is null)
-            throw new ArgumentNullException(nameof(stream));
+        ArgumentNullException.ThrowIfNull(stream);
 
         try
         {
@@ -406,4 +401,6 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
         RecyclableMemoryStreamManager mgr = await mgrTask.NoSync();
         return GetStreamFromChars(mgr, c.Span);
     }
+
+    public ValueTask DisposeAsync() => _manager.DisposeAsync();
 }
