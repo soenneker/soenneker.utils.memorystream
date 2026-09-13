@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 
 namespace Soenneker.Utils.MemoryStream;
 
-/// <inheritdoc cref="IMemoryStreamUtil" />
 public sealed class MemoryStreamUtil : IMemoryStreamUtil
 {
     private static readonly Encoding _utf8 = Encoding.UTF8;
@@ -113,42 +112,8 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
         return GetStreamFromString(GetManagerSync(cancellationToken), str);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private static System.IO.MemoryStream GetStreamFromString(RecyclableMemoryStreamManager mgr, string str)
-    {
-        if (str.Length == 0)
-            return mgr.GetStream();
-
-        int byteCount = _utf8.GetByteCount(str);
-        if (byteCount == 0)
-            return mgr.GetStream();
-
-        System.IO.MemoryStream ms = mgr.GetStream(tag: null, requiredSize: byteCount);
-
-        try
-        {
-            ms.SetLength(byteCount);
-
-            if (ms.TryGetBuffer(out ArraySegment<byte> seg))
-            {
-                _utf8.GetBytes(str.AsSpan(), seg.AsSpan(0, byteCount));
-                ms.Position = 0;
-                return ms;
-            }
-
-            byte[] tmp = GC.AllocateUninitializedArray<byte>(byteCount);
-            _utf8.GetBytes(str.AsSpan(), tmp);
-            ms.Position = 0;
-            ms.Write(tmp, 0, tmp.Length);
-            ms.Position = 0;
-            return ms;
-        }
-        catch
-        {
-            ms.Dispose();
-            throw;
-        }
-    }
+    private static System.IO.MemoryStream GetStreamFromString(RecyclableMemoryStreamManager mgr, string str) =>
+        GetStreamFromChars(mgr, str.AsSpan());
 
     public async ValueTask<byte[]> GetBytesFromStream(Stream stream, bool keepOpen = false, CancellationToken cancellationToken = default)
     {
@@ -183,6 +148,20 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
 
         if (remaining == 0)
             return Array.Empty<byte>();
+
+        if (memStream is RecyclableMemoryStream recyclable)
+        {
+            byte[] result = GC.AllocateUninitializedArray<byte>(remaining);
+            try
+            {
+                recyclable.ReadExactly(result);
+                return result;
+            }
+            finally
+            {
+                recyclable.Position = pos64;
+            }
+        }
 
         if (memStream.TryGetBuffer(out ArraySegment<byte> seg))
         {
@@ -248,13 +227,7 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
             if (length == 0)
                 return Array.Empty<byte>();
 
-            if (buffer.TryGetBuffer(out ArraySegment<byte> seg))
-            {
-                byte[] result = GC.AllocateUninitializedArray<byte>(length);
-                Buffer.BlockCopy(seg.Array!, seg.Offset, result, 0, length);
-                return result;
-            }
-
+            // RecyclableMemoryStream.ToArray copies its blocks directly into the required result array.
             return buffer.ToArray();
         }
         finally
@@ -288,37 +261,8 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
         return GetStreamFromBytes(mgr, bytes);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private static System.IO.MemoryStream GetStreamFromBytes(RecyclableMemoryStreamManager mgr, ReadOnlySpan<byte> span)
-    {
-        if (span.Length == 0)
-            return mgr.GetStream();
-
-        System.IO.MemoryStream ms = mgr.GetStream(tag: null, requiredSize: span.Length);
-
-        try
-        {
-            ms.SetLength(span.Length);
-
-            if (ms.TryGetBuffer(out ArraySegment<byte> seg))
-            {
-                span.CopyTo(seg.AsSpan(0, span.Length));
-            }
-            else
-            {
-                ms.Position = 0;
-                ms.Write(span);
-            }
-
-            ms.Position = 0;
-            return ms;
-        }
-        catch
-        {
-            ms.Dispose();
-            throw;
-        }
-    }
+    private static System.IO.MemoryStream GetStreamFromBytes(RecyclableMemoryStreamManager mgr, ReadOnlySpan<byte> span) =>
+        mgr.GetStream(span);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValueTask<System.IO.MemoryStream> Get(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
@@ -354,27 +298,30 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
         if (charsSpan.Length == 0)
             return mgr.GetStream();
 
-        int byteCount = checked(_utf8.GetByteCount(charsSpan));
-        if (byteCount == 0)
-            return mgr.GetStream();
-
-        System.IO.MemoryStream ms = mgr.GetStream(tag: null, requiredSize: byteCount);
+        // Reserve the block list once, without setting Length or clearing/copying the payload.
+        RecyclableMemoryStream ms = mgr.GetStream(tag: null, requiredSize: _utf8.GetByteCount(charsSpan));
 
         try
         {
-            ms.SetLength(byteCount);
-
-            if (ms.TryGetBuffer(out ArraySegment<byte> seg))
+            Span<byte> boundaryBuffer = stackalloc byte[6];
+            while (!charsSpan.IsEmpty)
             {
-                _utf8.GetBytes(charsSpan, seg.AsSpan(0, byteCount));
-                ms.Position = 0;
-                return ms;
-            }
+                // Encode into the available block; a large size hint would rent a temporary contiguous buffer.
+                scoped Span<byte> destination = ms.GetSpan(1);
+                bool crossesBlock = destination.Length < 6;
+                if (crossesBlock)
+                    destination = boundaryBuffer;
+                int count = Math.Min(charsSpan.Length, Math.Min(32768, destination.Length / 3));
+                if (count < charsSpan.Length && char.IsHighSurrogate(charsSpan[count - 1]))
+                    count--;
 
-            byte[] tmp = GC.AllocateUninitializedArray<byte>(byteCount);
-            _utf8.GetBytes(charsSpan, tmp);
-            ms.Position = 0;
-            ms.Write(tmp, 0, tmp.Length);
+                int written = _utf8.GetBytes(charsSpan[..count], destination);
+                if (crossesBlock)
+                    ms.Write(destination[..written]);
+                else
+                    ms.Advance(written);
+                charsSpan = charsSpan[count..];
+            }
             ms.Position = 0;
             return ms;
         }
