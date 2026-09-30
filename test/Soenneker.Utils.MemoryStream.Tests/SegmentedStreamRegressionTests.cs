@@ -10,7 +10,7 @@ namespace Soenneker.Utils.MemoryStream.Tests;
 public class SegmentedStreamRegressionTests
 {
     [Test]
-    public async Task ByteSpanPreservesSegmentationAndPosition()
+    public async ValueTask ByteSpanPreservesSegmentationAndPosition()
     {
         await using var util = new MemoryStreamUtil();
         byte[] input = new byte[500_000];
@@ -32,7 +32,7 @@ public class SegmentedStreamRegressionTests
     [Arguments(32767)]
     [Arguments(43689)]
     [Arguments(200_000)]
-    public async Task CharactersRoundTripAcrossBuffers(int length)
+    public async ValueTask CharactersRoundTripAcrossBuffers(int length)
     {
         await using var util = new MemoryStreamUtil();
         string input = new string('界', length) + "😀\uD800";
