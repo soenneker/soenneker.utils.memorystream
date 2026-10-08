@@ -4,26 +4,27 @@ using System.Text;
 using System.Threading.Tasks;
 using AwesomeAssertions;
 using Microsoft.IO;
+using System.Threading;
 
 namespace Soenneker.Utils.MemoryStream.Tests;
 
 public class SegmentedStreamRegressionTests
 {
     [Test]
-    public async ValueTask ByteSpanPreservesSegmentationAndPosition()
+    public async ValueTask ByteSpanPreservesSegmentationAndPosition(CancellationToken cancellationToken)
     {
         await using var util = new MemoryStreamUtil();
         byte[] input = new byte[500_000];
         new System.Random(1).NextBytes(input);
-        using System.IO.MemoryStream stream = util.GetSync(input.AsSpan());
+        using System.IO.MemoryStream stream = util.GetSync(input.AsSpan(), cancellationToken: cancellationToken);
         stream.Position.Should().Be(0);
         stream.Length.Should().Be(input.Length);
-        util.GetManagerSync().LargePoolInUseSize.Should().Be(0);
+        util.GetManagerSync(cancellationToken: cancellationToken).LargePoolInUseSize.Should().Be(0);
         stream.Position = 131_071;
-        byte[] result = await util.GetBytesFromStream(stream, keepOpen: true);
+        byte[] result = await util.GetBytesFromStream(stream, keepOpen: true, cancellationToken: cancellationToken);
         result.AsSpan().SequenceEqual(input.AsSpan(131_071)).Should().BeTrue();
         stream.Position.Should().Be(131_071);
-        util.GetManagerSync().LargePoolInUseSize.Should().Be(0);
+        util.GetManagerSync(cancellationToken: cancellationToken).LargePoolInUseSize.Should().Be(0);
     }
 
     [Test]
@@ -32,17 +33,17 @@ public class SegmentedStreamRegressionTests
     [Arguments(32767)]
     [Arguments(43689)]
     [Arguments(200_000)]
-    public async ValueTask CharactersRoundTripAcrossBuffers(int length)
+    public async ValueTask CharactersRoundTripAcrossBuffers(int length, CancellationToken cancellationToken)
     {
         await using var util = new MemoryStreamUtil();
         string input = new string('界', length) + "😀\uD800";
         byte[] expected = Encoding.UTF8.GetBytes(input);
-        using System.IO.MemoryStream fromString = util.GetSync(input);
-        using System.IO.MemoryStream fromSpan = util.GetSync(input.AsSpan());
+        using System.IO.MemoryStream fromString = util.GetSync(input, cancellationToken: cancellationToken);
+        using System.IO.MemoryStream fromSpan = util.GetSync(input.AsSpan(), cancellationToken: cancellationToken);
         fromString.Position.Should().Be(0);
         fromSpan.Position.Should().Be(0);
         fromString.ToArray().Should().Equal(expected);
         fromSpan.ToArray().Should().Equal(expected);
-        util.GetManagerSync().LargePoolInUseSize.Should().Be(0);
+        util.GetManagerSync(cancellationToken: cancellationToken).LargePoolInUseSize.Should().Be(0);
     }
 }

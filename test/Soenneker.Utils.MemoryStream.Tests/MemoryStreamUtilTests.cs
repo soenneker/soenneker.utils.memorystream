@@ -52,7 +52,7 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async ValueTask GetManager_WithCancellationToken_ShouldComplete()
+    public async ValueTask GetManager_WithCancellationToken_ShouldComplete(CancellationToken cancellationToken)
     {
         using CancellationTokenSource cts = new();
 
@@ -208,7 +208,7 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async ValueTask Get_WithByteArray_WithCancellationToken_ShouldReturnMemoryStream()
+    public async ValueTask Get_WithByteArray_WithCancellationToken_ShouldReturnMemoryStream(CancellationToken cancellationToken)
     {
         byte[] data = [1, 2, 3];
         using CancellationTokenSource cts = new();
@@ -320,7 +320,7 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async ValueTask Get_WithString_WithCancellationToken_ShouldReturnMemoryStream()
+    public async ValueTask Get_WithString_WithCancellationToken_ShouldReturnMemoryStream(CancellationToken cancellationToken)
     {
         string text = "Test";
         using CancellationTokenSource cts = new();
@@ -370,7 +370,7 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async ValueTask Get_WithReadOnlyMemoryByte_WithCancellationToken_ShouldReturnMemoryStream()
+    public async ValueTask Get_WithReadOnlyMemoryByte_WithCancellationToken_ShouldReturnMemoryStream(CancellationToken cancellationToken)
     {
         byte[] data = [1, 2, 3];
         ReadOnlyMemory<byte> memory = data;
@@ -531,7 +531,7 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async ValueTask Get_WithReadOnlyMemoryChar_WithCancellationToken_ShouldReturnMemoryStream()
+    public async ValueTask Get_WithReadOnlyMemoryChar_WithCancellationToken_ShouldReturnMemoryStream(CancellationToken cancellationToken)
     {
         string text = "Test";
         ReadOnlyMemory<char> memory = text.AsMemory();
@@ -643,7 +643,7 @@ public class MemoryStreamUtilTests
         try
         {
             byte[] originalData = [10, 20, 30, 40];
-            await File.WriteAllBytesAsync(tempFile, originalData);
+            await File.WriteAllBytesAsync(tempFile, originalData, cancellationToken: cancellationToken);
 
             using FileStream fileStream = new(tempFile, FileMode.Open, FileAccess.Read);
 
@@ -672,7 +672,7 @@ public class MemoryStreamUtilTests
     }
 
     [Test]
-    public async ValueTask GetBytesFromStream_WithCancellationToken_ShouldReturnByteArray()
+    public async ValueTask GetBytesFromStream_WithCancellationToken_ShouldReturnByteArray(CancellationToken cancellationToken)
     {
         byte[] originalData = [1, 2, 3, 4];
         using System.IO.MemoryStream inputStream = new(originalData);
