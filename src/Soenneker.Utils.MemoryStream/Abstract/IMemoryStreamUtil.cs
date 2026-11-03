@@ -13,6 +13,24 @@ namespace Soenneker.Utils.MemoryStream.Abstract;
 /// <remarks>Be sure to dispose of the streams returned from this ASAP.</remarks>
 public interface IMemoryStreamUtil : IAsyncDisposable
 {
+    /// <summary>Wraps existing bytes in a read-only stream without copying them or initializing the recyclable-stream manager.</summary>
+    /// <param name="bytes">Memory to read. Its owner must keep it alive and unchanged until the returned stream is disposed.</param>
+    /// <returns>A caller-owned read-only stream positioned at the beginning. Disposing it does not release the supplied memory.</returns>
+    [Pure]
+    Stream GetReadOnly(ReadOnlyMemory<byte> bytes);
+
+    /// <summary>Creates a read-only stream that encodes a string as UTF-8 without first allocating an encoded byte array.</summary>
+    /// <param name="str">Text to read as UTF-8, without a byte-order mark.</param>
+    /// <returns>A caller-owned read-only stream. Callers should not require seeking.</returns>
+    [Pure]
+    Stream GetReadOnly(string str);
+
+    /// <summary>Creates a read-only stream that encodes characters as UTF-8 without first allocating an encoded byte array.</summary>
+    /// <param name="chars">Characters to read. Their owner must keep the memory alive and unchanged until the returned stream is disposed.</param>
+    /// <returns>A caller-owned read-only stream, without a byte-order mark. Callers should not require seeking.</returns>
+    [Pure]
+    Stream GetReadOnly(ReadOnlyMemory<char> chars);
+
     /// <summary>
     /// Typically, not going to be used externally, but available just in case.
     /// </summary>

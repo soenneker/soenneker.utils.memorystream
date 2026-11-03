@@ -24,6 +24,16 @@ public sealed class MemoryStreamUtil : IMemoryStreamUtil
         _manager = new AsyncSingleton<RecyclableMemoryStreamManager>(CreateManager);
     }
 
+    public Stream GetReadOnly(ReadOnlyMemory<byte> bytes) => new ReadOnlyMemoryStream(bytes);
+
+    public Stream GetReadOnly(string str)
+    {
+        ArgumentNullException.ThrowIfNull(str);
+        return new StringStream(str, _utf8);
+    }
+
+    public Stream GetReadOnly(ReadOnlyMemory<char> chars) => new StringStream(chars, _utf8);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static RecyclableMemoryStreamManager CreateManager() => new();
 
